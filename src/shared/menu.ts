@@ -37,7 +37,7 @@ export interface MenuLeaf {
    * third-party=第三方注册的菜单项（见 buildMoreBranch）——点击只把 (owner, label) 上报给宿主，
    * 具体做什么由注册方自己决定。
    * 手动触发均不受 whisperEnabled 影响（该字段只关自动周期轮询） */
-  action?: 'open-site' | 'show-balance' | 'whisper' | 'chat' | 'home' | 'reload' | 'set-display' | 'third-party';
+  action?: 'open-site' | 'show-balance' | 'whisper' | 'chat' | 'home' | 'reload' | 'reload-config' | 'set-display' | 'third-party';
   /** set-display 的目标显示位置（与设置页「显示位置」下拉框同一套取值） */
   display?: PetDisplay;
   /** third-party：注册它的 owner（身份键，**只用于回传，不显示**）。同一个 owner 的项收在同一个

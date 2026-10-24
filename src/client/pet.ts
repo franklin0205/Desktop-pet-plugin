@@ -2024,6 +2024,22 @@ export function makePetUI(rt: {
         });
         return;
       }
+      if (leaf.action === 'reload-config') {
+        // 浏览器端「重载配置」：重新 GET /config?force=1（宿主每次都会 readAllConfig 重读磁盘上的
+        // 主配置与 pet/ 宠物包），拿到成品聚合后交给 petBridge.reload 即时拍平——
+        // 与设置页保存同一条应用路径，不需要刷新页面。
+        console.info('[dsh-pet-zoo] 菜单重载配置（浏览器端） pet=' + cfg.id);
+        fetch('/dsh-pet-zoo-7340/config?force=1', { cache: 'no-store' })
+          .then((r) => {
+            if (!r.ok) throw new Error('config HTTP ' + r.status);
+            return r.json() as Promise<Record<string, Record<string, unknown>>>;
+          })
+          .then((body) => {
+            petBridge.reload(body);
+          })
+          .catch((e: unknown) => console.warn('[dsh-pet-zoo] 重载配置失败', e));
+        return;
+      }
       if (leaf.action === 'set-display') {
         // 显示位置：POST 到宿主写配置，成功后再用**权威成品**重拉配置。
         // 改成不含 web 的值（仅桌面/都不）时 visiblePets 会把它过滤掉——宠物即从页面消失。
@@ -2097,6 +2113,10 @@ export function makePetUI(rt: {
         { label: '碎碎念', action: 'whisper' },
         { label: '对话', action: 'chat' },
         { label: '回到初始位置', action: 'home' },
+        // 重载配置（浏览器端）：重新拉取合并后的配置并即时应用——等价于刷新页面，但不用刷新。
+        // 桌面端由桌面壳注入同名项（action=reload，重启桌面 Helper）；浏览器端走 reload-config，
+        // 只重读配置、不碰桌面 Helper。
+        { label: '重载配置', action: 'reload-config' },
         // 显示位置（仅网页/仅桌面/两者/都不）：与桌面端注入**同一份**子菜单。
         // 改成不含 web 的值（仅桌面/都不）后，本宠物会随即从 visiblePets 里消失——字面意义上的"自己走掉"。
         displayMenuBranch(),
