@@ -179,13 +179,15 @@ export function buildMenuTree(animations: Animations): MenuNode[] {
   // 数组槽位（档内随机候选）展平为逐个叶子——所有候选都可右键点播预览。
   const events = animations.events ?? {};
   for (const key of Object.keys(events)) {
+    if (key === 'whisper') continue; // 碎碎念不在菜单显示（周期提醒仍生效）
     const pool = events[key] ?? [];
     const names: string[] = [];
     for (const slot of pool) {
       if (typeof slot === 'string') names.push(slot);
       else names.push(...slot);
     }
-    if (names.length) groups.push({ label: EVENT_LABELS[key] ?? key, children: names.map(leaf) });
+    const uniq = [...new Set(names)];
+    if (uniq.length) groups.push({ label: EVENT_LABELS[key] ?? key, children: uniq.map(leaf) });
   }
   if (!groups.length) return [];
   return [{ label: '动作', children: groups }];
