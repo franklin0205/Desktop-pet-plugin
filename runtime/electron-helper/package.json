@@ -1,0 +1,7 @@
+{
+  "name": "dsh-pet-zoo-electron-helper",
+  "version": "0.1.0",
+  "private": true,
+  "description": "dsh-pet-zoo desktop helper — Electron transparent overlay window",
+  "main": "main.js"
+}
