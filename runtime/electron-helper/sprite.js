@@ -1007,6 +1007,13 @@ class PetSprite {
         this.throwState = null;
         this.customPos = { rx: (this.pos.x + this.halfW) / VIEW.w, ry: (this.pos.y + this.halfH) / VIEW.h };
         window.__dshPetDebug.lastDragRelease = { x: this.pos.x, y: this.pos.y };
+        // 落地静止：保持拖拽表情，1 秒后再回待机
+        clearTimeout(this.restIdleTimer);
+        this.restIdleTimer = setTimeout(() => {
+          this.restIdleTimer = null;
+          if (this.animations.idle.length) this.playOnce(S.pick(this.animations.idle, this.anim));
+          else this.playIdle();
+        }, 1000);
         return;
       }
       this.throwRef = requestAnimationFrame(step);
@@ -1271,6 +1278,8 @@ class PetSprite {
     const dy = toLocal(e.screenY) - d.sy;
     if (!d.dragging) {
       if (Math.hypot(dx, dy) < S.DRAG_THRESHOLD) return;
+      clearTimeout(this.restIdleTimer);
+      this.restIdleTimer = null;
       d.dragging = true;
       // 真正开始拖拽才把舞台拍平（人物随光标拿起；与浏览器 dragging 语义一致）
       this.stage.style.transform = 'none';
@@ -1333,7 +1342,8 @@ class PetSprite {
       // 修复：旧实现 switchTo(idle,false)（loop=true，ended 永不触发）→ 随机链永远回不来，
       // 永远卡在同一段待机动画；改为 playOnce（once=true）播一遍 → ended → handleEnded → playIdle 随机链
       if (!this.resumeWorkStatusAnim()) {
-        if (this.animations.idle.length) this.playOnce(S.pick(this.animations.idle, this.anim));
+        // 保持拖拽表情循环（不切待机）；落地静止 1 秒后再回待机
+        this.switchTo(this.anim, false);
       }
       // 释放位置 = 弹簧跟随后的实际包围盒左上角（this.pos 实时；不是指针目标——
       // 跟手滞后时落点跟随宠物实际位置，与浏览器 boxPx 同语义）
@@ -1387,6 +1397,12 @@ class PetSprite {
           // startThrow 落定也按同一公式存），松手无边界夹取
           this.customPos = { rx: (px + this.halfW) / VIEW.w, ry: (py + this.halfH) / VIEW.h };
           this.position();
+          clearTimeout(this.restIdleTimer);
+          this.restIdleTimer = setTimeout(() => {
+            this.restIdleTimer = null;
+            if (this.animations.idle.length) this.playOnce(S.pick(this.animations.idle, this.anim));
+            else this.playIdle();
+          }, 1000);
           // 释放后的最终窗口位置（position() 换算后，松手无夹取），冒烟断言"释放不位移"用
           window.__dshPetDebug.lastDragRelease = { x: this.pos.x, y: this.pos.y };
         }
