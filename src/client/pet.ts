@@ -359,6 +359,7 @@ export function makePetUI(rt: {
       anchorY: 0,
     });
     const justDraggedRef = useRef(false);
+    const restIdleTimerRef = useRef(null);
     // 拖拽抛掷物理状态：轨迹样本 / 包围盒左上角实时 px / 弹簧目标与速度 / 弹簧跟随 rAF / 抛掷 rAF
     const dragTrailRef = useRef<DragSample[]>([]);
     const boxPxRef = useRef<{ x: number; y: number } | null>(null);
@@ -1400,7 +1401,16 @@ export function makePetUI(rt: {
           throwRef.current = null;
           throwStateRef.current = null;
           setCustomPos(customPosRef.current);
-          return;
+                    if (!resumeWorkStatusAnim()) {
+            clearTimeout(restIdleTimerRef.current);
+            restIdleTimerRef.current = setTimeout(() => {
+              restIdleTimerRef.current = null;
+              if (petAnims.idle.length) setAnim(pick(petAnims.idle, animRef.current));
+              setOnce(true);
+              setSeq((s) => s + 1);
+            }, 1000);
+          }
+return;
         }
         throwRef.current = requestAnimationFrame(step);
       };
@@ -1764,6 +1774,8 @@ export function makePetUI(rt: {
       const sling = pressNow - lastPressAtRef.current < SLINGSHOT_DOUBLE_MS;
       lastPressAtRef.current = sling ? 0 : pressNow; // 命中就清掉，免得连点三下弹两次
       const anchor = boxPxRef.current;
+      clearTimeout(restIdleTimerRef.current);
+      restIdleTimerRef.current = null;
       dragRef.current = {
         active: true,
         dragging: false,
@@ -1862,8 +1874,7 @@ export function makePetUI(rt: {
         // 拖拽松手：workStatus 非终态时恢复状态循环；否则播一遍待机 → ended → 回随机链
         // （once=true；旧实现 once=false 无限循环，ended 永不触发、随机链永远回不来——历史卡死 bug）
         if (!resumeWorkStatusAnim()) {
-          if (petAnims.idle.length) setAnim(pick(petAnims.idle, animRef.current));
-          setOnce(true);
+          setOnce(false); // 拖拽/抛出期间保持拖拽表情（循环）
         }
         // 释放位置 = 弹簧跟随的实时包围盒左上角（不是指针目标：跟手滞后时落点跟随宠物实际位置）
         const bx = boxPxRef.current;
