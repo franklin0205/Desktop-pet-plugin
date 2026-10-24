@@ -68,6 +68,52 @@
 Safari / WKWebView 不认 webm 的 alpha（会黑底），需要另放 `.mov`（HEVC-alpha）到
 `pet/<种类>-animation/mov/`。Chrome / Edge / Firefox 与桌面模式照常用 webm。
 
+## 开发者：维护与发布
+
+### 本机已做的配置（换电脑要重做）
+
+- SSH 密钥：`~/.ssh/id_ed25519_dshpet`（公钥已加到 GitHub 账号）
+- 本仓库已设置：
+
+  ```powershell
+  git config core.sshCommand "ssh -i C:/Users/<你>/.ssh/id_ed25519_dshpet -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new"
+  git remote set-url origin ssh://git@ssh.github.com:443/franklin0205/Desktop-pet-plugin.git
+  ```
+
+- **为什么走 443**：本机 22 端口被代理拦截（`Connection closed by 198.18.0.19`），
+  GitHub 提供 `ssh.github.com:443` 作为替代。主机指纹应为
+  `SHA256:+DiY3wvvV6TuJJhbpZisF/zLDA0zPMSvHdkr4UvCOqU`（GitHub 官方 ED25519 指纹）。
+
+### 日常提交
+
+```powershell
+git add -A
+git commit -m "说明"
+git push
+```
+
+### 发布到 npm（让别人能 `dsh plugin add 包名` 一键装）
+
+```powershell
+npm login              # 只需一次
+npm publish --access public
+```
+
+包名若被占用，改用 scoped 包：把 `package.json` 的 `name` 改成 `@franklin0205/dsh-pet-zoo`，
+再 `npm publish --access public`。
+
+> 本仓库已移除 `prepack` 构建链（`lib/` 是预构建产物），可以直接 publish，无需装 devDependencies。
+
+### 修改包名 / 作者
+
+脚手架脚本 `make_meta.py`（不在本仓库内）里的 `AUTHOR` 与包名改好后重跑，会同步更新
+`package.json` 与 README 里的链接。
+
+### 提交前务必确认
+
+> ⚠️ **不要**把影视 / 动漫等他人版权角色转成的动画提交进仓库。本仓库内置的是原创形象；
+> 个人私用的角色素材放在本机 `~/.dsh/<包名>/pet/`，不会进版本库。
+
 ## 授权
 
 - 本包是 [dsh-pet](https://github.com/PC2005-cloud/dsh-pet) 的衍生物，原始版权归 **PC2005-cloud**（MIT），
